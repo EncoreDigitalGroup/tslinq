@@ -1,0 +1,60 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - "v[0-9]+.[0-9]+.[0-9]+"
+            - "!v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+"
+
+permissions: write-all
+
+jobs:
+    Publish:
+        runs-on: ubuntu-latest
+        permissions: write-all
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v4
+
+            -   name: Extract Version from Tag
+                id: getVersion
+                run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+            -   name: Setup Node
+                uses: actions/setup-node@v4
+                with:
+                    node-version: "22.x"
+                    registry-url: "https://npm.pkg.github.com"
+                    scope: "@encoresoftware"
+
+            -   name: Install NPM Dependencies (React)
+                run: |
+                    cd $GITHUB_WORKSPACE
+                    npm ci
+                env:
+                    NODE_AUTH_TOKEN: ${{secrets.GH_GENERAL_ACCESS_TOKEN}}
+
+            -   name: Update Package Version
+                run: npm version ${{ steps.getVersion.outputs.version }} --no-git-tag-version
+
+            -   name: Build
+                run: npm run build
+
+            -   name: Publish
+                run: npm publish
+                env:
+                    NODE_AUTH_TOKEN: ${{secrets.GH_GENERAL_ACCESS_TOKEN}}
+
+    CreateRelease:
+        needs: Publish
+        name: Create Release
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Create Release
+                uses: EncoreDigitalGroup/ci-workflows/actions/github/createRelease@v3
+                with:
+                    generateReleaseNotes: true
+                    isDraft: false
+                    repository: ${{ github.repository }}
+                    tagName: ${{ github.ref_name }}
+                    token: ${{ secrets.GITHUB_TOKEN }}
