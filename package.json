@@ -1,0 +1,61 @@
+{
+    "name": "@encoredigitalgroup/tslinq",
+    "type": "module",
+    "author": "Encore Digital Group",
+    "version": "0.0.0",
+    "description": "Generic LINQ-style query builder for TypeScript with fluent, type-safe collection operations",
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
+    },
+    "keywords": [
+        "linq",
+        "query",
+        "fluent",
+        "typescript",
+        "collection",
+        "functional",
+        "query-builder",
+        "type-safe"
+    ],
+    "homepage": "https://github.com/encoredigitalgroup/tslinq#readme",
+    "devDependencies": {
+        "@biomejs/biome": "^2.3.10",
+        "@encoredigitalgroup/core": "^0.1.6",
+        "@types/node": "^22.0.0",
+        "json-sort-cli": "^4.1.0",
+        "typescript": "^5.6.0",
+        "vite": "^6.0.0",
+        "vite-plugin-dts": "^4.0.0",
+        "vitest": "^2.0.0"
+    },
+    "scripts": {
+        "prebuild": "npx @biomejs/biome check --fix && npm run json:sort && npx @encoredigitalgroup/core",
+        "build": "vite build",
+        "json:sort": "node_modules/.bin/jsonsort --indentationCount=4 tsconfig.json && jsonsort --indentationCount=4 package.json",
+        "test": "vitest",
+        "test:coverage": "vitest --coverage",
+        "test:watch": "vitest --watch"
+    },
+    "types": "./dist/index.d.ts",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "files": [
+        "dist",
+        "src",
+        "README.md"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/encoredigitalgroup/tslinq.git"
+    },
+    "bugs": {
+        "url": "https://github.com/encoredigitalgroup/tslinq/issues"
+    }
+}

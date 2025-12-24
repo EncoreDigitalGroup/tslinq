@@ -1,0 +1,110 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - "v[0-9]+.[0-9]+.[0-9]+"
+            - "!v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+"
+
+permissions: write-all
+
+jobs:
+    Publish:
+        runs-on: ubuntu-latest
+        permissions: write-all
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v4
+
+            -   name: Extract Version from Tag
+                id: getVersion
+                run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+            -   name: Setup Node
+                uses: actions/setup-node@v4
+                with:
+                    node-version: "22.x"
+                    registry-url: "https://npm.pkg.github.com"
+                    scope: "@encoresoftware"
+
+            -   name: Setup Go
+                uses: actions/setup-go@v5
+                with:
+                    go-version: '>=1.24.1'
+                    go-version-file: '${{github.workspace}}/go.mod'
+                    cache: true
+                    cache-dependency-path: '${{github.workspace}}/go.sum'
+
+            -   name: Install NPM Dependencies (React)
+                run: |
+                    cd $GITHUB_WORKSPACE
+                    npm ci
+                env:
+                    NODE_AUTH_TOKEN: ${{secrets.GH_GENERAL_ACCESS_TOKEN}}
+
+            -   name: Update Package Version
+                run: npm version ${{ steps.getVersion.outputs.version }} --no-git-tag-version
+
+            -   name: Generate Main Hash
+                id: mainHash
+                shell: bash
+                run: echo "hash=$(sha256sum ${{github.workspace}}/bin/build.go | cut -d ' ' -f 1)" >> $GITHUB_OUTPUT
+
+            -   name: Generate Module Hash
+                id: moduleHash
+                shell: bash
+                run: echo "hash=$(sha256sum ${{github.workspace}}/go.sum | cut -d ' ' -f 1)" >> $GITHUB_OUTPUT
+
+            -   name: Restore Go Modules Cache
+                uses: actions/cache@v4
+                id: goModuleCache
+                with:
+                    path: ~/go/pkg/mod
+                    key: ${{ runner.os }}-go-modules-${{ steps.moduleHash.outputs.hash }}
+
+            -   name: Restore Binary Cache
+                uses: actions/cache@v4
+                id: binary-cache
+                with:
+                    path: ${{github.workspace}}/bin/build
+                    key: ${{ runner.os }}-go-binary-${{ steps.mainHash.outputs.hash }}
+
+            -   name: Tidy Go Modules
+                if: ${{ steps.binary-cache.outputs.cache-hit != 'true' }}
+                shell: bash
+                working-directory: ${{github.workspace}}
+                run: go mod tidy
+
+            -   name: Build Binary
+                if: ${{ steps.binary-cache.outputs.cache-hit != 'true' }}
+                shell: bash
+                working-directory: ${{github.workspace}}
+                run: go build -o ${{github.workspace}}/bin/build bin/build.go
+
+            -   name: Set Execute Permissions on Binary
+                if: ${{ steps.binary-cache.outputs.cache-hit == 'true' }}
+                shell: bash
+                working-directory: ${{github.workspace}}
+                run: chmod +x ${{github.workspace}}/bin/build
+
+            -   name: Build
+                run: npm run build
+
+            -   name: Publish
+                run: npm publish
+                env:
+                    NODE_AUTH_TOKEN: ${{secrets.GH_GENERAL_ACCESS_TOKEN}}
+
+    CreateRelease:
+        needs: Publish
+        name: Create Release
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Create Release
+                uses: EncoreDigitalGroup/ci-workflows/actions/github/createRelease@v3
+                with:
+                    generateReleaseNotes: true
+                    isDraft: false
+                    repository: ${{ github.repository }}
+                    tagName: ${{ github.ref_name }}
+                    token: ${{ secrets.GITHUB_TOKEN }}
