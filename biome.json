@@ -1,0 +1,71 @@
+{
+    "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+    "vcs": {
+        "enabled": false,
+        "clientKind": "git",
+        "useIgnoreFile": false
+    },
+    "files": {
+        "ignoreUnknown": false,
+        "includes": ["**"]
+    },
+    "formatter": {
+        "enabled": true,
+        "useEditorconfig": true,
+        "formatWithErrors": false,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineEnding": "lf",
+        "lineWidth": 120,
+        "attributePosition": "auto",
+        "bracketSpacing": true,
+        "includes": ["**", "!**/*.*"]
+    },
+    "assist": {
+        "actions": {
+            "source": {
+                "organizeImports": "on"
+            }
+        }
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "recommended": false,
+            "correctness": {
+                "noUnusedVariables": "warn",
+                "noUnusedImports": "error"
+            }
+        },
+        "includes": [
+            "**",
+            "!**/build/**/*",
+            "!**/node_modules/**/*",
+            "!**/dist/**/*",
+            "!**/vendor/**/*",
+            "!**/jest.config.ts",
+            "!**/jest.globalSetup.ts",
+            "!**/jest.global.mocks.ts",
+            "!**/auto-imports.d.ts",
+            "!**/components.d.ts"
+        ]
+    },
+    "css": {
+        "parser": {
+            "tailwindDirectives": true
+        }
+    },
+    "javascript": {
+        "formatter": {
+            "jsxQuoteStyle": "double",
+            "quoteProperties": "asNeeded",
+            "trailingCommas": "all",
+            "semicolons": "always",
+            "arrowParentheses": "asNeeded",
+            "bracketSameLine": false,
+            "quoteStyle": "double",
+            "attributePosition": "auto",
+            "bracketSpacing": false
+        }
+    }
+}
