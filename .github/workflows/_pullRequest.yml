@@ -50,8 +50,10 @@ jobs:
             -   name: Set Up Node.js
                 uses: actions/setup-node@v4
                 with:
-                    node-version: "20"
+                    node-version: "22.x"
                     cache: "npm"
+                    registry-url: "https://npm.pkg.github.com"
+                    scope: "@encoresoftware"
 
             -   name: Install Dependencies
                 run: npm install
