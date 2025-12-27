@@ -18,6 +18,7 @@
  */
 export interface Queryable {
     type: string;
+
     [key: string]: any;
 }
 

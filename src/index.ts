@@ -49,3 +49,4 @@
 
 export {Query} from "./core/Query";
 export type {KeySelector, Predicate, Queryable, QueryConfig, Selector, TypeFilterConfig} from "./core/types";
+export {useQuery} from "./core/useQuery";
